@@ -52,4 +52,28 @@ Canlıdaki uygulamada API anahtarını güvenli bir şekilde saklamak için:
 - **Güvenli:** API anahtarları asla koda gömülmez, ortam değişkenleri ile yönetilir.
 
 ---
-Geliştiren: Ali İhsan ÇETİN - 2026
+
+## 🚀 Canlıya Aktarma (Deployment)
+
+Bu uygulama Streamlit Cloud üzerinde yayınlanmaya uygun hale getirilmiştir. Canlıya almak için şu adımları izleyin:
+
+### 1. GitHub'a Yükleme
+Projenizi bir GitHub deposuna (repository) yüklediğinizden emin olun. (Zaten yüklü olduğunu biliyoruz!)
+
+### 2. Streamlit Cloud Bağlantısı
+1. [share.streamlit.io](https://share.streamlit.io/) adresine gidin.
+2. GitHub hesabınızı bağlayın.
+3. **"New app"** butonuna tıklayın ve bu projenin bulunduğu depoyu seçin.
+4. "Main file path" kısmına `app.py` yazın.
+
+### 3. API Anahtarını Tanımlama (Kritik Adım)
+Streamlit Cloud üzerinde `.env` dosyaları çalışmaz. Bunun yerine **Secrets** özelliğini kullanmalısınız:
+1. Uygulama ayarlarından **"Secrets"** sekmesine gidin.
+2. Aşağıdaki formatta API anahtarınızı ekleyin:
+   ```toml
+   GROQ_API_KEY = "gsk_xxxxxxx..."
+   ```
+3. **Save** butonuna basın. Uygulama otomatik olarak yeniden başlayacak ve API anahtarını tanıyacaktır.
+
+---
+© 2026 VisionAI Project - Ali İhsan ÇETİN

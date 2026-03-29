@@ -6,10 +6,8 @@ from PIL import Image
 from groq import Groq
 from dotenv import load_dotenv
 
-# .env dosyasından değişkenleri yükle
-base_path = os.path.dirname(os.path.abspath(__file__))
-env_path = os.path.join(base_path, '.env')
-load_dotenv(dotenv_path=env_path)
+# .env dosyasından değişkenleri yükle (Yerel geliştirme için)
+load_dotenv()
 
 # Sayfa Yapılandırması (Premium Görünüm)
 st.set_page_config(
@@ -51,12 +49,16 @@ with st.sidebar:
     st.title("🛠️ Kontrol Paneli")
     st.info("Bu uygulama Groq Cloud altyapısını kullanarak her türlü nesneyi tanımlayabilir.")
     
-    # API Anahtarı Kontrolü
-    api_key_env = os.getenv("GROQ_API_KEY")
+    # API Anahtarı Kontrolü (Önce Secrets, sonra Env)
+    api_key_env = None
+    if "GROQ_API_KEY" in st.secrets:
+        api_key_env = st.secrets["GROQ_API_KEY"]
+    elif os.getenv("GROQ_API_KEY"):
+        api_key_env = os.getenv("GROQ_API_KEY")
     
-    # Eğer env içinde varsa, sormadan onu kullanıyoruz
+    # Eğer sistemde/secrets'ta varsa, sormadan onu kullanıyoruz
     if api_key_env:
-        st.success("✅ API Anahtarı Sistemden Yüklendi (.env)")
+        st.success("✅ API Anahtarı Hazır (Sistem/Secrets)")
         api_key_input = api_key_env
     else:
         # Eğer yoksa manuel giriş istiyoruz
