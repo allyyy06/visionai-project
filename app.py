@@ -20,22 +20,40 @@ st.set_page_config(
 st.markdown("""
 <style>
     .main {
-        background-color: #0e1117;
+        background-color: #0b0e14;
+        color: #e0e0e0;
     }
     .stAlert {
-        border-radius: 10px;
+        border-radius: 12px;
     }
     .res-card {
-        padding: 20px;
-        background-color: #1e1e1e;
-        border-radius: 15px;
-        border: 1px solid #3d3d3d;
-        margin-bottom: 20px;
+        padding: 24px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        margin-bottom: 25px;
+        transition: transform 0.3s ease;
+    }
+    .res-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(0, 255, 204, 0.3);
     }
     .confidence-text {
-        font-size: 24px;
+        font-size: 28px;
+        font-weight: 800;
+        background: linear-gradient(45deg, #00ffcc, #0099ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .stButton>button {
+        border-radius: 10px;
+        height: 3em;
+        background: linear-gradient(45deg, #00ffcc, #0099ff);
+        color: white;
+        border: none;
         font-weight: bold;
-        color: #00ffcc;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -80,18 +98,27 @@ with st.sidebar:
 
 # Ana Ekran
 st.title("🔍 VisionAI: Akıllı Nesne Tanımlayıcı")
-st.markdown("#### Herhangi bir fotoğraf yükleyin, yapay zeka saniyeler içinde analiz etsin.")
+st.markdown("#### Herhangi bir fotoğraf yükleyin veya kameranızı kullanın, yapay zeka analiz etsin.")
 
-# Dosya Yükleyici
-uploaded_file = st.file_uploader("Bir resim seçin veya buraya sürükleyin...", type=["jpg", "jpeg", "png"])
+# Giriş Seçenekleri
+tabs = st.tabs(["📁 Dosya Yükle", "📸 Kamera Kullan"])
 
-if uploaded_file is not None:
+with tabs[0]:
+    uploaded_file = st.file_uploader("Bir resim seçin...", type=["jpg", "jpeg", "png"], key="file_upload")
+
+with tabs[1]:
+    camera_file = st.camera_input("Kameranızla bir fotoğraf çekin", key="camera_input")
+
+# Hangi kaynaktan veri geldiğini kontrol et
+input_file = camera_file if camera_file is not None else uploaded_file
+
+if input_file is not None:
     col1, col2 = st.columns([1, 1])
     
     with col1:
         # Resmi Göster
-        image = Image.open(uploaded_file)
-        st.image(image, caption="Yüklenen Görsel", use_container_width=True)
+        image = Image.open(input_file)
+        st.image(image, caption="Analiz Edilen Görsel", use_container_width=True)
     
     with col2:
         if not api_key_input:
@@ -105,7 +132,9 @@ if uploaded_file is not None:
                         
                         # Görseli hazırla
                         img_byte_arr = io.BytesIO()
-                        image.save(img_byte_arr, format=image.format if image.format else 'JPEG')
+                        # RGB'ye dönüştür ki RGBA veya farklı formatlar hata vermesin (özellikle kameradan gelenler)
+                        image_rgb = image.convert("RGB")
+                        image_rgb.save(img_byte_arr, format='JPEG')
                         base64_image = encode_image(img_byte_arr.getvalue())
                         
                         # Groq API Çağrısı
@@ -129,33 +158,36 @@ if uploaded_file is not None:
                                     ],
                                 }
                             ],
-                            temperature=0.5,
-                            max_tokens=500,
+                            temperature=0.3,
+                            max_tokens=600,
                             response_format={"type": "json_object"}
                         )
                         
                         # Yanıtı işle
                         import json
-                        result = json.loads(response.choices[0].message.content)
+                        result_str = response.choices[0].message.content
+                        result = json.loads(result_str)
                         
                         # Sonuçları Göster
                         st.balloons()
                         st.markdown(f"""
                         <div class="res-card">
-                            <h3>🏷️ Nesne: {result.get('name', 'Bilinmiyor')}</h3>
-                            <p style="font-size: 18px;">{result.get('description', '')}</p>
-                            <hr>
-                            <p>Güven Skoru:</p>
-                            <span class="confidence-text">{result.get('confidence', 'N/A')}</span>
+                            <h3 style="color: #00ffcc; margin-top: 0;">🏷️ {result.get('name', 'Bilinmiyor')}</h3>
+                            <p style="font-size: 18px; line-height: 1.6;">{result.get('description', '')}</p>
+                            <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                                <span style="font-size: 14px; color: #888;">Güven Skoru:</span><br>
+                                <span class="confidence-text">{result.get('confidence', 'N/A')}</span>
+                            </div>
                         </div>
                         """, unsafe_allow_html=True)
                         
                     except Exception as e:
                         st.error(f"Bir hata oluştu: {str(e)}")
+                        st.info("İpucu: API anahtarınızın doğruluğunu ve internet bağlantınızı kontrol edin.")
 
 else:
     # Boş durum mesajı
-    st.info("Analiz için yukarıdan bir fotoğraf yükleyerek başlayın.")
+    st.info("Analiz için yukarıdan bir fotoğraf yükleyin veya kameranızı kullanın.")
 
 # Footer
 st.markdown("---")
